@@ -1,0 +1,116 @@
+name = "De Morgan's game"
+version = "1.0"
+extra_files = "extras"
+intro = "src/intro.lean"
+
+
+[[worlds]]
+name = "Tutorial"
+id = 1
+levels = [ "src/tutorial/tutorial.lean",
+            "src/tutorial/tut2.lean",
+            "src/tutorial/tut3.lean",
+            "src/tutorial/tut4.lean"
+             ]
+
+[[worlds]]
+name = "Logical statements"
+id = 2
+parents = [1]
+levels = [   "src/logic_1/logic_pt2.lean",
+            "src/logic_1/logic_pt1.lean",        
+            "src/logic_1/logic3.lean",
+            "src/logic_1/logic4.lean",
+            "src/logic_1/logic5.lean",
+            "src/logic_1/logic6.lean",
+            "src/logic_1/logic7.lean",
+            ]
+
+[[worlds]]
+name = "True and False"
+id = 3
+parents = [2]
+    levels = [  "src/true_false/tf1.lean",
+                "src/true_false/tf2.lean",
+                "src/true_false/tf3.lean",
+                "src/true_false/tf4.lean",
+                "src/true_false/tf5.lean",
+            ]
+
+
+[[worlds]]
+name = "And & Or"
+id = 4
+parents = [2]
+    levels = [  "src/logic2/splittac.lean",
+                "src/logic2/splittac2.lean",
+                 "src/logic2/lr.lean",
+                  "src/logic2/casestac.lean",
+                  "src/logic2/casestac2.lean",
+             "src/logic2/logical_andseasy.lean",
+                  "src/logic2/logical_andseasy2.lean",
+                       "src/logic2/logical_andseasy3.lean",
+                ]
+
+[[worlds]]
+name = "Logic laws"
+id = 5
+parents = [4]
+    levels = [ 
+                "src/logic2/logical_ands2.lean",
+                "src/logic2/logical_ands3.lean",
+                "src/logic2/logical_ands4.lean",
+                "src/logic2/logical_ands5.lean",
+                "src/logic2/logical_ands6.lean",
+                "src/logic2/logical_ands7.lean",
+            ]
+
+
+[[worlds]]
+name = "Not logic"
+id = 6
+parents = [4]
+    levels = [  "src/logic3/notlogic.lean",
+                "src/true_false/tf6.lean",
+                "src/logic3/pnotpfalse.lean",
+                "src/logic3/notlogic1.lean",
+                 "src/logic3/notlogic2.lean",
+                  "src/logic3/notlogicb.lean",
+                "src/logic3/notlogicb2.lean",
+                 "src/logic3/notlogicb3.lean",
+                 "src/logic3/notlogicb4.lean",
+            ]
+
+[[worlds]]
+name = "De Morgan's laws"
+id = 7
+parents = [5, 6]
+    levels = [  "src/logic3/notlogic3.lean",
+                "src/logic3/notlogic4.lean",
+            ]
+
+[[worlds]]
+name = "More true and false"
+id = 8
+parents = [6]
+    levels = [  "src/logic3/nottf2.lean",
+                "src/logic3/nottf.lean",
+                "src/true_false/tf8.lean",
+                "src/true_false/tf9.lean",
+                "src/true_false/tf10.lean",
+                
+    ]
+
+[[worlds]]
+name = "Bonus content"
+id = 9
+parents = [7]
+levels = [             
+            "src/logic_1/logic8.lean",
+            "src/logic_1/logic9.lean",
+            "src/logic_1/logic10.lean",
+            "src/logic_1/logic11.lean",
+            "src/logic_1/logic12.lean",
+            "src/logic_1/logic13.lean",
+             "src/logic2/logical_ands8.lean",
+            ]
