@@ -1,124 +1,92 @@
-
-About a month ago, the [Cauchy integral
-theorem](https://en.wikipedia.org/wiki/Cauchy%27s_integral_theorem)
-for some simple domains
-[landed](https://github.com/leanprover-community/mathlib/pull/10000)
-in mathlib. PR number 10000 was specially allocated for this occasion
-in advance. In this post I will recollect the events that led to this
-formalization.
+In [PR# 13250](https://github.com/leanprover-community/mathlib/pull/13250) 	we define modular forms, cusp forms and prove that they form a complex vector space. These are important functions of number theoretic interest, due to their links with geometry, representation theory and analysis. Most famously they are a  key ingredient in the proof of Fermat's Last Theorem. In this post we discuss the formalization process and the main issues that arose.
 
 <!-- TEASER_END -->
 
-Unlike all other formalizations of the Cauchy integral formula, this
-one is based on a very general version of the [divergence
-theorem](https://en.wikipedia.org/wiki/Divergence_theorem). I discuss
-the technical decisions behind this formalization in a
-[paper](https://github.com/urkud/divthm-paper) I have recently
-submitted to the ITP conference.
+#Basic definitions
 
-The simplest version of the divergence theorem says that for a
-continuously differentiable vector field $v$ on a rectangular box $I$
-in $ℝ^n$, the integral of the divergence $\operatorname{div} v$ over
-$I$ is equal to the flux of $v$ through the boundary of $I$, where the
-flux of $v$ through $i$-th front (resp., back) face of $I$ is defined
-as plus (resp., minus) the integral of $v_i$ over this face.
+Before going any further I should mention that this isn't the first time modular forms have been defined in Lean. Back in 2018, for Kevin Buzzard's birthday several people defined modular forms (amongst other things) [here](https://github.com/semorrison/kbb). Although the current definition looks quite different, it was of great use when I started learning Lean. Moreover I should say the current version benefited immensely from great feedback from many people, including Riccardo Brasca, Kevin Buzzard, David Loeffler, Jireh Loreaux, Heather Macbeth and Eric Wieser.
 
-The Cauchy integral theorem (a.k.a. the Cauchy-Goursat theorem) states
-that the integral $\oint_\gamma f(z)\,dz$ is equal to zero provided
-that $f$ is complex differentiable in the domain bounded by
-$\gamma$. For simplicity, let us consider only rectangular domains.
+At their most basic, modular forms are functions on the complex upper half plane $\mathbb{H}:=\\{ z \in \mathbb{C} \mid 0 \lt  Im(z)\\}$ to $\mathbb{C}$ satisfying certain properties. Before giving the definition, lets first define an action on this space of functions.
 
-If $f:ℂ → ℂ$ is *continuously differentiable* on this rectangle, then
-the Cauchy-Goursat theorem for $f$ on this rectangle follows from the
-divergence theorem applied to the vector field $v_{f}(x,
-y)=(\operatorname{Re} f(x+iy), -\operatorname{Im} f(x+iy))$.
+For any 
 
-Many students (including me) were taught that this argument can't be
-patched to work for any differentiable function, and one has to use a
-trick specific to complex analysis (e.g., an explicit infinite descent
-on triangles). In October 2020, we [had a chat on
-Zulip](https://leanprover.zulipchat.com/#narrow/stream/217875-Is-there.20code.20for.20X.3F/topic/Single.20variable.20complex.20analysis)
-about formalization of complex analysis, where Patrick Massot
-[shared](https://leanprover.zulipchat.com/#narrow/stream/217875-Is-there.20code.20for.20X.3F/topic/Single.20variable.20complex.20analysis/near/214237436)
-a link to a
-[paper](https://link.springer.com/article/10.1007/BF03024304) by
-Felipe Acker where Felipe proves the divergence theorem for a
-differentiable vector field with continuous divergence. The vector
-field $v_f$ introduced above has divergence zero, hence this version
-of the divergence theorem implies the Cauchy-Goursat theorem.
+$$\gamma =
+\left(\begin{array}{cc} 
+a & b\\ 
+c & d
+\end{array}\right)
+$$
 
-I started formalizing a simplified version of Acker's proof right
-away, and had a draft version by November 2020. Later I dropped this
-version, but some traces of this attempt can be found in
-[this](https://github.com/leanprover-community/mathlib/pull/4913)
-abandoned pull request.
+in $\mathrm{GL}_2(\mathbb{R})^+$ the weight $k \in \mathbb{Z}$ action of $\gamma$ on $f : \mathbb{H} \to \mathbb{C}$ is given by $$(f \mid_k \gamma) (z):=\mathrm{det} (\gamma)^{k-1} (cz+d)^{-k} f\left ( \frac{az+b}{cz+d}\right ).$$ One easily checks that this defines a right action on this space of functions, known as the weight $k$ *slash action*.
 
-Once I had the first draft, I realized that the proof reminded me of
-the proof of the Fundamental Theorem of Calculus for the
-Henstock-Kurzweil integral. I had heard about this integral when I
-was a student at the Moscow State University, and some of my
-classmates complained that their professor Lukashenko[^MSU] made them
-study the useless Henstock integral as a part of a standard 1st year
-analysis course.
+Let  $\Gamma$ denote a subgroup of $\mathrm{SL}_2(\mathbb{Z})$, then a modular form  of level $\Gamma$ and weight $k \in \mathbb{Z}$ is a function $f : \mathbb{H} \to \mathbb{C}$ such that:
 
-[^MSU]: The undergraduate education at MSU (and most other Russian
-    universities) is very different from what you see on the
-    West. Different majors have separate entrance exams (it is
-    possible but not at all trivial to change one's from math major to
-    CS or economics) and most of the courses for the first 2-3 years
-    are determined by the student's major. Moreover, the students are
-    distributed into groups of about 20-25 people, and students from
-    one group go to the same section of each course. All ~300 of math
-    major freshmen have to take proof-based courses in Analysis,
-    Algebra, and Linear Algebra.
+- (🥓) For all $\gamma \in \Gamma$ we have $f\mid_k \gamma = f$. We will call such functions *slash invariant forms*.
+- (🦖) $f$ is holomorphic on $\mathbb{H}$.
+- (🐱) For all $\gamma \in \mathrm{SL}_2(\mathbb{Z})$, there exist $A, B \in \mathbb{R}$ such that for all $z \in \mathbb{H}$, with $ A \le \mathrm{Im}(z)$, we have $|(f \mid_k \gamma) (z) |\le B$. Here $| - |$ denotes the standard complex absolute value. We call such functions *bounded at infinity*.
 
-So, I opened some old lecture notes written by my classmates,
-refreshed my knowledge of the Henstock integral, and realized that
-actually I prove that the divergence is integrable in the sense of one
-of possible generalizations of this integral to $ℝ^n$. Thus I decided
-to formalize the Henstock integral in Lean and split the proof into
-two parts: the divergence theorem for a Henstock-like integral that
-required no regularity from the divergence, and a proof of the fact
-that any Bochner integrable function is Henstock integrable.
+This defines a complex vector space which we denote by $M_{k}(\Gamma)$. By replacing condition (🐱) in the above with (🐶) below defines the subspace of cusp forms, which we denote by $S_k(\Gamma)$.
 
-During most of 2021 I worked on other projects but in the fall I came back to
-the divergence theorem and formalized it. The university library was
-closed because of the pandemic and I failed to find a good source on the
-multivariable Henstock integral online, so I had to generalize
-theorems myself.
+- (🐶)  For all $\gamma \in \mathrm{SL}_2(\mathbb{Z})$, and all  $0 < \epsilon$, there exists $A \in \mathbb{R}$ such that for all $z \in \mathbb{H}$, with $ A \le \mathrm{Im}(z)$, we have $|(f \mid_k \gamma) (z) |\le \epsilon$. We call such functions *zero at infinity*.
 
-The most difficult part was to formalize the notion of a
-Henstock/McShane/Riemann integral (it took more than 4000 lines) and
-figure out what parts of the one-dimensional proofs I had at hand work
-in the multivariable settings.
+Although the following examples are not part of this PR, let me include them here so that we can see some interesting examples of modular forms, known as *Eisenstein series*. These are functions defined as $$G_k(z) = \sum_{(c,d) \ne (0,0)} \frac{1}{(cz+d)^k}, \qquad \text{for } c,d \in \mathbb{Z}.$$ For $k \gt 2$ and even these functions are non-zero modular forms of weight $k$ and level $\mathrm{SL}_2(\mathbb{Z})$. 
 
-In October 2021, I formalized the divergence theorem for a
-Henstock-style integral and by the first days of January I had the
-Cauchy-Goursat theorem. This opened a door to formalization of other
-topics in complex analysis, and I have already formalized the Riemann
-removable singularity theorem
-([merged](https://github.com/leanprover-community/mathlib/pull/11686))
-and the maximum modulus principle ([pending API update and
-review](https://github.com/leanprover-community/mathlib/pull/10978)). Moreover,
-Jireh Loreaux already used my new additions to the library to
-[prove](https://github.com/leanprover-community/mathlib/pull/11916)
-Gelfand's formula for the spectral radius, pending review.
+# Formalised definitions
 
-In January 2022, I decided to write an ITP paper about this
-project. While searching for references for the paper, I found a
-[survey by Benedetto
-Bongiorno](https://doi.org/10.1016/B978-044450263-6/50014-2). I still
-can't understand why I didn't find this survey half a year earlier
-(I found it by googling for something like "Henstock integral
-divergence theorem"). I read the survey and found out that the version
-of the Henstock-Kurzweil integral I used in the project was introduced
-by Mawhin about 5 years before I was born, and there are several more
-advanced definitions that allow us to prove the divergence theorem
-with even weaker assumptions (e.g., with one of the integrals one can
-replace the differentiability assumption by continuity on a *countable
-set of hyperplanes*).
+Lets now look at what this ended up as in mathlib. There we lots of small things that needed doing before getting to these definitions, such as defining $\mathrm{GL}_n$ (and $\mathrm{GL}_n^+$) ([PR# 8466](https://github.com/leanprover-community/mathlib/pull/8466)), extending the action of $\mathrm{SL}_2(\mathbb{R})$ on $\mathbb{H}$ to an action of $\mathrm{GL}_2(\mathbb{R})^+$ ([PR# 12415](https://github.com/leanprover-community/mathlib/pull/12415)), defining slash actions ([PR# 15007](https://github.com/leanprover-community/mathlib/pull/15007)), defining when a function is zero or bounded at infinity [PR #15009](https://github.com/leanprover-community/mathlib/pull/15009) amongst other things. But these aren't so interesting so lets skip this and more towards something closer to modular forms.
 
-For a few days, I was unsure whether I should proceed with my paper or
-implement one of these integrals first. Then I decided to write about
-the completed project and write about other integrals in the "Future
-plans" section.
+The first useful definition is that of `slash_invariant_forms` which was introduced in [PR# 17677](https://github.com/leanprover-community/mathlib/pull/17677) and defines spaces of functions $f : \mathbb{H} \to \mathbb{B}$ which are invariant under the slash action (of some specified weight and level)[^1]. Explicitly the we defined:
+
+```lean
+structure slash_invariant_form :=
+(to_fun : ℍ → ℂ)
+(slash_action_eq' : ∀ γ : Γ, to_fun ∣[k, γ] = to_fun)
+
+class slash_invariant_form_class extends fun_like F ℍ (λ _, ℂ) :=
+(slash_action_eq : ∀ (f : F) (γ : Γ), (f : ℍ → ℂ) ∣[k, γ] = f)
+```
+
+here `Γ` is a subgroup of $\mathrm{SL}_2(\mathbb{Z})$ and `∣[k, γ]` is notation for the weight `k` slash action by `γ`. The idea behind having a structure and a class[^2] is that later, we will define modular forms and cusp forms as extensions of these structures and classes. By doing this (and proving some number of other instances) we can make so that lemmas proven for `slash_invariant_forms` will automatically hold for modular forms and cusp forms (such as [this](https://leanprover-community.github.io/mathlib_docs/number_theory/modular_forms/slash_invariant_forms.html#slash_invariant_form.slash_action_eqn')). 
+
+Next we can define modular forms as follows: 
+
+```lean
+structure modular_form extends slash_invariant_form Γ k :=
+(holo' : mdifferentiable 𝓘(ℂ) 𝓘(ℂ) (to_fun : ℍ → ℂ))
+(bdd_at_infty' : ∀ (A : SL(2, ℤ)), is_bounded_at_im_infty (to_fun ∣[k, A]))
+
+class modular_form_class extends slash_invariant_form_class F Γ k :=
+(holo: ∀ f : F, mdifferentiable 𝓘(ℂ) 𝓘(ℂ) (f : ℍ → ℂ))
+(bdd_at_infty : ∀ (f : F) (A : SL(2, ℤ)), is_bounded_at_im_infty (f ∣[k, A]))
+```
+
+Here: 
+-  `mdifferentiable` enforces that the function is holomorphic (now as a function between complex manifolds $\mathbb{H}$ and $\mathbb{C}$.
+-  `is_bounded_at_im_infty` encodes (🐱) above by requiring that $f$ be bounded with respect to the filter "tends to $i\infty$" (`at_im_infty`).[^3]
+
+The definition of cusp forms is the same, except we change `is_bounded_at_im_infty` for `is_zero_at_im_infty`. We then give a long list of instances that these new types satisfy, ending up at:
+
+```lean
+instance : module ℂ (modular_form Γ k) :=
+
+instance : module ℂ (cusp_form Γ k) :=
+```
+
+**Remark :** At this point you are allowed to complain that these definitions are now as general as they could be. For example, why restrict the levels to subgroups of $\mathrm{SL}_2(\mathbb{Z})$? or why only consider modular forms for $\mathrm{GL}_2$? or why are the weights not allowed to be rational numbers?, etc. These defintions go againts the philosophy of "doing things as generally as possible". In this situation, doing the most general definitions would require us to have more complicated conditions for (🐱)  and (🐶), or defining more general connected reductive groups over global fields. But as Kevin Buzzard [suggested](https://leanprover.zulipchat.com/#narrow/stream/144837-PR-reviews/topic/.2313250.20Modular.20form.20definition/near/303611399), we can reserve the name automorphic form for these more general objects. Otherwise it would be years until we could talk about Atkin--Lehner theory, multiplicity one, modularity conjectures, etc.
+
+# Whats next?
+
+The very next thing we will PR about modular forms will be the fact that one can define a graded commutative ring of modular forms (i.e. prove a `gcomm_ring` instance). Originally, the definitions for the spaces of modular forms had them as subspaces of the complex vector space of functions $\mathbb{H} \to \mathbb{C}$, which made it relatively straight forward to construct this graded ring. With the final form of the defitions one runs into the usual problems that `(modular_form Γ k)` isn't defeq to `(modular_form Γ (k + 0))` (and other similar issues). Meaning that one needs to work a bit harder to give the `gcomm_ring` instance. But with some guidance from Eric Weiser, it seems doable (see [PR# 17879](https://github.com/leanprover-community/mathlib/pull/17879)). 
+
+After this, 
+
+
+
+[^1]: If you add the condition that such functions are also meromorphic you get *weakly modular functions*.
+[^2]: The idea of using these structures/classes and `fun_like` was suggested to us by Mortiz Doll and Jireh Loreaux
+[^3]: This filter definition of bounded at infinity and zero at infinity was suggested to us by David Loeffler.
+
+
+
+
+
