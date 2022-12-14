@@ -76,9 +76,9 @@ instance : module ℂ (cusp_form Γ k) :=
 
 # Whats next?
 
-The very next thing we will PR about modular forms will be the fact that one can define a graded commutative ring of modular forms (i.e. prove a `gcomm_ring` instance). Originally, the definitions for the spaces of modular forms had them as subspaces of the complex vector space of functions $\mathbb{H} \to \mathbb{C}$, which made it relatively straight forward to construct this graded ring. With the final form of the defitions one runs into the usual problems that `(modular_form Γ k)` isn't defeq to `(modular_form Γ (k + 0))` (and other similar issues). Meaning that one needs to work a bit harder to give the `gcomm_ring` instance. But with some guidance from Eric Weiser, it seems doable (see [PR# 17879](https://github.com/leanprover-community/mathlib/pull/17879)). 
+The very next thing we will PR about modular forms will be the fact that one can define a graded commutative ring of modular forms (i.e. prove a `gcomm_ring` instance). Originally, the definitions for the spaces of modular forms had them as subspaces of the complex vector space of functions $\mathbb{H} \to \mathbb{C}$, which made it relatively straight forward to construct this graded ring (as they were all terms of the same type). With the final form of the defitions one runs into the usual problems that `(modular_form Γ k)` isn't defeq to `(modular_form Γ (k + 0))` (and other similar issues). Meaning that one needs to work a bit harder to give the `gcomm_ring` instance. But with some guidance from Eric Weiser, it is doable (see [PR# 17879](https://github.com/leanprover-community/mathlib/pull/17879)). This is also a nice test that our definition is workable.
 
-After this, 
+After this, the next obvious goal is to get some examples into mathlib, meaning Eisenstein series. There is a repo [here](https://github.com/CBirkbeck/ModularForms) which has a proof that Eisenstein series are in fact modular forms. It also contains several other things that should gradually make their way into mathlib (or more likely mathlib4) such a q-expansions, Hecke algebras, Petersson inner products, etc.
 
 
 
