@@ -1,4 +1,4 @@
-In [PR# 13250](https://github.com/leanprover-community/mathlib/pull/13250) 	we define modular forms, cusp forms and prove that they form a complex vector space. These are analytic functions of number theoretic interest, due to their links with geometry, representation theory and analysis. Most famously they are a  key ingredient in the proof of Fermat's Last Theorem. In this post we discuss the formalization process and the main issues that arose.
+In [PR# 13250](https://github.com/leanprover-community/mathlib/pull/13250) 	we define modular forms, cusp forms and prove that they form a complex vector space. These are analytic functions of number theoretic interest, due to their links with geometry, representation theory and analysis. Most famously they are a  key ingredient in the proof of Fermat's Last Theorem. In this post we discuss the formalization process, motivate some design choices and map out some future work.
 
 <!-- TEASER_END -->
 
@@ -29,11 +29,11 @@ This defines a complex vector space which we denote by $M_{k}(\Gamma)$. By repla
 
 - (🐶)  For all $\gamma \in \mathrm{SL}_2(\mathbb{Z})$, and all  $0 < \epsilon$, there exists $A \in \mathbb{R}$ such that for all $z \in \mathbb{H}$, with $A \le \mathrm{Im}(z)$, we have $|(f \mid_k \gamma) (z) |\le \epsilon$. We call such functions *zero at infinity*.
 
-Although the following examples are not part of this PR, let me include them here so that we can see some interesting examples of modular forms, known as *Eisenstein series*. These are functions defined as $$G_k(z) = \sum_{(c,d) \ne (0,0)} \frac{1}{(cz+d)^k}, \qquad \text{for } c,d \in \mathbb{Z}.$$ For $k \gt 2$ and even these functions are non-zero modular forms of weight $k$ and level $\mathrm{SL}_2(\mathbb{Z})$. 
+In case you have never seen these things before, let me give an example known as *Eisenstein series*. Note that these examples are not part of this PR. These are functions defined as $$G_k(z) = \sum_{(c,d) \ne (0,0)} \frac{1}{(cz+d)^k}, \qquad \text{for } c,d \in \mathbb{Z}.$$ For $k \gt 2$ and even these functions are non-zero modular forms of weight $k$ and level $\mathrm{SL}_2(\mathbb{Z})$. 
 
 # Formalised definitions
 
-Lets now look at what this ended up as in mathlib. There we lots of small things that needed doing before getting to these definitions, such as defining $\mathrm{GL}_n$ (and $\mathrm{GL}_n^+$) ([PR# 8466](https://github.com/leanprover-community/mathlib/pull/8466))[^0], extending the action of $\mathrm{SL}_2(\mathbb{R})$ on $\mathbb{H}$ to an action of $\mathrm{GL}_2(\mathbb{R})^+$ ([PR# 12415](https://github.com/leanprover-community/mathlib/pull/12415)), defining slash actions ([PR# 15007](https://github.com/leanprover-community/mathlib/pull/15007)), defining when a function is zero or bounded at infinity ([PR #15009](https://github.com/leanprover-community/mathlib/pull/15009)) amongst other things. But these aren't so interesting so lets skip this and more towards something closer to modular forms.
+Lets now look at what this ended up as in mathlib. There were lots of small things that needed doing before getting to these definitions, such as defining $\mathrm{GL}_n$ (and $\mathrm{GL}_n^+$) ([PR# 8466](https://github.com/leanprover-community/mathlib/pull/8466))[^0], extending the action of $\mathrm{SL}_2(\mathbb{R})$ on $\mathbb{H}$ to an action of $\mathrm{GL}_2(\mathbb{R})^+$ ([PR# 12415](https://github.com/leanprover-community/mathlib/pull/12415)), defining slash actions ([PR# 15007](https://github.com/leanprover-community/mathlib/pull/15007)), defining when a function is zero or bounded at infinity ([PR #15009](https://github.com/leanprover-community/mathlib/pull/15009)) amongst other things. But these aren't so interesting so lets skip them and move towards something closer to modular forms.
 
 The first useful definition is that of `slash_invariant_forms` which was introduced in [PR# 17677](https://github.com/leanprover-community/mathlib/pull/17677) and defines spaces of functions $f : \mathbb{H} \to \mathbb{C}$ which are invariant under the slash action (of some specified weight and level)[^1], i.e. they satisfy (🥓) above. Explicitly we define:
 
@@ -46,7 +46,7 @@ class slash_invariant_form_class extends fun_like F ℍ (λ _, ℂ) :=
 (slash_action_eq : ∀ (f : F) (γ : Γ), (f : ℍ → ℂ) ∣[k, γ] = f)
 ```
 
-Here `Γ` is a subgroup of $\mathrm{SL}_2(\mathbb{Z})$ and `∣[k, γ]` is notation for the weight `k` slash action by `γ`. The idea behind having a structure and a class[^2] is that later, we will define modular forms and cusp forms as extensions of these structures and classes. By doing this (and proving some number of other instances) we can make so that lemmas proven for `slash_invariant_forms` will automatically hold for modular forms and cusp forms (such as [this](https://leanprover-community.github.io/mathlib_docs/number_theory/modular_forms/slash_invariant_forms.html#slash_invariant_form.slash_action_eqn')). 
+Here `Γ` is a subgroup of $\mathrm{SL}_2(\mathbb{Z})$ and `∣[k, γ]` is notation for the weight `k` slash action by `γ`. The idea behind having a structure and a class[^2] which extends the `fun_like` class, is that later, we will define modular forms and cusp forms as extensions of these structures and classes. By doing this (and proving some number of other instances) we can make so that lemmas proven for `slash_invariant_forms` will automatically hold for modular forms and cusp forms (such as [this](https://leanprover-community.github.io/mathlib_docs/number_theory/modular_forms/slash_invariant_forms.html#slash_invariant_form.slash_action_eqn')). This also allows us to prove algebraic instances using the `fun_like` machinery. 
 
 Next we can define modular forms as follows: 
 
@@ -61,18 +61,33 @@ class modular_form_class extends slash_invariant_form_class F Γ k :=
 ```
 
 Here: 
--  `mdifferentiable` enforces that the function is holomorphic (now as a function between complex manifolds $\mathbb{H}$ and $\mathbb{C}$.
+-  `mdifferentiable` enforces that the function is holomorphic (now as a function between complex manifolds $\mathbb{H}$ and $\mathbb{C}$. The `𝓘(ℂ)` appearing are giving $\mathbb{H}$ and $\mathbb{C}$ the structure of a complex manifold. 
 -  `is_bounded_at_im_infty` encodes (🐱) above by requiring that $f$ be bounded with respect to the [filter](https://leanprover-community.github.io/mathlib_docs/analysis/complex/upper_half_plane/functions_bounded_at_infty.html#upper_half_plane.at_im_infty) "tends to $i\infty$" (`at_im_infty`).[^3]
+
+As a sanity check we prove that the filter definition of "bounded at infinity" agress with (🐱): 
+
+```lean
+lemma bounded_mem (f : ℍ → ℂ) :
+  is_bounded_at_im_infty f ↔ ∃ (M A : ℝ), ∀ z : ℍ, A ≤ im z → abs (f z) ≤ M :=
+```
 
 The definition of cusp forms is the same, except we change `is_bounded_at_im_infty` for `is_zero_at_im_infty`. We then give a long list of instances that these new types satisfy, ending up at:
 
 ```lean
 instance : module ℂ (modular_form Γ k) :=
+  function.injective.module ℂ coe_hom fun_like.coe_injective (λ _ _, rfl) --note we are making use of the fun_like instance
+```
+and similarly for cusp forms. Finally we have some instances which allow us exploit these structure/class definitions:
 
-instance : module ℂ (cusp_form Γ k) :=
+```lean
+instance modular_form_class.modular_form : modular_form_class (modular_form Γ k) Γ k :=
+instance cusp_form_class.cusp_form : cusp_form_class (cusp_form Γ k) Γ k :=
+instance [cusp_form_class F Γ k] : modular_form_class F Γ k :=
 ```
 
-**Remark :** At this point you are allowed to complain that these definitions are not as general as they could be. For example, why restrict the levels to subgroups of $\mathrm{SL}_2(\mathbb{Z})$? or why only consider modular forms for $\mathrm{GL}_2$? or why are the weights not allowed to be rational numbers?, etc. These defintions go againts the philosophy of "doing things as generally as possible". In this situation, doing the most general definitions would require us to have more complicated conditions for (🐱)  and (🐶), or defining more general connected reductive groups over global fields. But as Kevin Buzzard [suggested](https://leanprover.zulipchat.com/#narrow/stream/144837-PR-reviews/topic/.2313250.20Modular.20form.20definition/near/303611399), we can reserve the name automorphic form until we  are ready to define these more general objects. Otherwise it would be years until we could talk about Atkin--Lehner theory, multiplicity one, modularity conjectures, etc.
+Now any lemma that holds, for example, for a `modular_form_class` will automatically hold for `modular_form`, `cusp_form` and `cusp_form_class`. 
+
+At this point you are allowed to complain that these definitions are not as general as they could be. For example, why restrict the levels to subgroups of $\mathrm{SL}_2(\mathbb{Z})$ and not, say, a discrete subgroup of $\mathrm{SL}_2(\mathbb{R})$ ? or why only consider modular forms for $\mathrm{GL}_2$? or why are the weights not allowed to be rational numbers?, etc. These defintions go againts the philosophy of "doing things as generally as possible". In this situation, doing the most general definitions would require us to have more complicated conditions for (🐱)  and (🐶), or defining more general connected reductive groups over global fields. But as Kevin Buzzard [suggested](https://leanprover.zulipchat.com/#narrow/stream/144837-PR-reviews/topic/.2313250.20Modular.20form.20definition/near/303611399), we can reserve the name automorphic form until we  are ready to define these more general objects. Otherwise it would be years until we could talk about modular forms and even longer for things like Atkin--Lehner theory, multiplicity one, modularity conjectures, etc.
 
 # What's next?
 
@@ -80,10 +95,12 @@ The next thing we plan to PR about modular forms will be the fact that one can d
 
 After this, the next obvious goal is to get some examples into mathlib, meaning Eisenstein series. There is a repo [here](https://github.com/CBirkbeck/ModularForms) which has a proof that Eisenstein series are in fact modular forms. The repo is a WIP, containing several other things that should gradually make their way into mathlib (or more likely mathlib4) such a q-expansions, Hecke algebras, Petersson inner products, etc.
 
+Eventually we will want to prove much more interesting thing about these spaces, such as the multiplicity one theorem, which will require more theory to be formalised. For example, proving that these spaces are finite dimensional, will require us to either do a contour integral (where the contour isn't a rectangle or a circle) or use Riemann--Roch + GAGA. Either of which is currently a pretty big task. 
+
 
 [^0]: If you are wondering why we would need this for defining modular forms, the answer is that we will eventually want Hecke operators acting on these spaces, so we need actions by more general matrices.
 [^1]: If you add the condition that such functions are also meromorphic you get *weakly modular functions*.
-[^2]: The idea of using these structures/classes and `fun_like` was suggested to us by Mortiz Doll and Jireh Loreaux
+[^2]: The idea of using these structures/classes and `fun_like` was suggested to us by Mortiz Doll and Jireh Loreaux. There is a nice explanation [here](https://leanprover.zulipchat.com/#narrow/stream/144837-PR-reviews/topic/.2313250.20Modular.20form.20definition/near/303535771) as to why using these classes is useful.
 [^3]: This filter definition of bounded at infinity and zero at infinity was suggested to us by David Loeffler.
 
 
