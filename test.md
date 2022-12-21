@@ -35,7 +35,7 @@ In case you have never seen these things before, let me give an example known as
 
 Lets now look at what this ended up as in mathlib. There were lots of small things that needed doing before getting to these definitions, such as defining $\mathrm{GL}_n$ (and $\mathrm{GL}_n^+$) ([PR# 8466](https://github.com/leanprover-community/mathlib/pull/8466))[^0], extending the action of $\mathrm{SL}_2(\mathbb{R})$ on $\mathbb{H}$ to an action of $\mathrm{GL}_2(\mathbb{R})^+$ ([PR# 12415](https://github.com/leanprover-community/mathlib/pull/12415)), defining slash actions ([PR# 15007](https://github.com/leanprover-community/mathlib/pull/15007)), defining when a function is zero or bounded at infinity ([PR #15009](https://github.com/leanprover-community/mathlib/pull/15009)) amongst other things. But these aren't so interesting so lets skip them and move towards something closer to modular forms.
 
-The first useful definition is that of `slash_invariant_forms` which was introduced in [PR# 17677](https://github.com/leanprover-community/mathlib/pull/17677) and defines spaces of functions $f : \mathbb{H} \to \mathbb{C}$ which are invariant under the slash action (of some specified weight and level)[^1], i.e. they satisfy (🥓) above. Explicitly we define:
+The first useful definition is that of [`slash_invariant_forms`](https://leanprover-community.github.io/mathlib_docs/number_theory/modular_forms/slash_invariant_forms.html#slash_invariant_form) which was introduced in [PR# 17677](https://github.com/leanprover-community/mathlib/pull/17677) and defines spaces of functions $f : \mathbb{H} \to \mathbb{C}$ which are invariant under the slash action (of some specified weight and level)[^1], i.e. they satisfy (🥓) above. Explicitly we define:
 
 ```lean
 structure slash_invariant_form :=
@@ -48,7 +48,7 @@ class slash_invariant_form_class extends fun_like F ℍ (λ _, ℂ) :=
 
 Here `Γ` is a subgroup of $\mathrm{SL}_2(\mathbb{Z})$ and `∣[k, γ]` is notation for the weight `k` slash action by `γ`. The idea behind having a structure and a class[^2] which extends the `fun_like` class, is that later, we will define modular forms and cusp forms as extensions of these structures and classes. By doing this (and proving some number of other instances) we can make so that lemmas proven for `slash_invariant_forms` will automatically hold for modular forms and cusp forms (such as [this](https://leanprover-community.github.io/mathlib_docs/number_theory/modular_forms/slash_invariant_forms.html#slash_invariant_form.slash_action_eqn')). This also allows us to prove algebraic instances using the `fun_like` machinery. 
 
-Next we can define modular forms as follows: 
+Next we can define [modular forms](https://leanprover-community.github.io/mathlib_docs/number_theory/modular_forms/basic.html#modular_form) as follows: 
 
 ```lean
 structure modular_form extends slash_invariant_form Γ k :=
@@ -62,7 +62,7 @@ class modular_form_class extends slash_invariant_form_class F Γ k :=
 
 Here: 
 -  `mdifferentiable` enforces that the function is holomorphic (now as a function between complex manifolds $\mathbb{H}$ and $\mathbb{C}$. The `𝓘(ℂ)` appearing are giving $\mathbb{H}$ and $\mathbb{C}$ the structure of a complex manifold. 
--  `is_bounded_at_im_infty` encodes (🐱) above by requiring that $f$ be bounded with respect to the [filter](https://leanprover-community.github.io/mathlib_docs/analysis/complex/upper_half_plane/functions_bounded_at_infty.html#upper_half_plane.at_im_infty) "tends to $i\infty$" (`at_im_infty`).[^3]
+-  [`is_bounded_at_im_infty`](https://leanprover-community.github.io/mathlib_docs/analysis/complex/upper_half_plane/functions_bounded_at_infty.html#upper_half_plane.is_bounded_at_im_infty) encodes (🐱) above by requiring that $f$ be bounded with respect to the [filter](https://leanprover-community.github.io/mathlib_docs/analysis/complex/upper_half_plane/functions_bounded_at_infty.html#upper_half_plane.at_im_infty) "tends to $i\infty$" (`at_im_infty`).[^3]
 
 As a sanity check we prove that the filter definition of "bounded at infinity" agress with (🐱): 
 
@@ -71,7 +71,7 @@ lemma bounded_mem (f : ℍ → ℂ) :
   is_bounded_at_im_infty f ↔ ∃ (M A : ℝ), ∀ z : ℍ, A ≤ im z → abs (f z) ≤ M :=
 ```
 
-The definition of cusp forms is the same, except we change `is_bounded_at_im_infty` for `is_zero_at_im_infty`. We then give a long list of instances that these new types satisfy, ending up at:
+The definition of [cusp forms](https://leanprover-community.github.io/mathlib_docs/number_theory/modular_forms/basic.html#cusp_form) is the same, except we change `is_bounded_at_im_infty` for [`is_zero_at_im_infty`](https://leanprover-community.github.io/mathlib_docs/analysis/complex/upper_half_plane/functions_bounded_at_infty.html#upper_half_plane.is_zero_at_im_infty). We then give a long list of instances that these new types satisfy, ending up at:
 
 ```lean
 instance : module ℂ (modular_form Γ k) :=
